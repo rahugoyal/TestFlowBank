@@ -14,5 +14,5 @@ class LogRepository @Inject constructor(
     suspend fun getLatestForSession(
         sessionId: Long,
         limit: Int
-    ): List<AppLog> = dao.getLatestForSession(sessionId, limit)
+    ): List<AppLog> = dao.getLatest(limit)
 }

@@ -1,13 +1,16 @@
 package com.example.testflowbank.ui.payments
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.example.testflowbank.core.crash.GlobalCoroutineErrorHandler
 import com.example.testflowbank.core.logging.AppLogger
 import com.example.testflowbank.data.payments.PaymentItem
 import com.example.testflowbank.data.payments.PaymentScenario
 import com.example.testflowbank.data.payments.PaymentStatus
 import com.example.testflowbank.data.payments.PaymentsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +27,20 @@ class PaymentsViewModel @Inject constructor(
     private val repo: PaymentsRepository,
     private val logger: AppLogger
 ) : ViewModel() {
+
+    private val vmScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Main.immediate + GlobalCoroutineErrorHandler
+    )
+    init {
+        vmScope.launch {
+            // Log entry into Transactions module
+            logger.screenView()
+            logger.journeyStep(
+                step = "OPEN_Payments",
+                detail = "User opened Payments module"
+            )
+        }
+    }
 
     private val _state = MutableStateFlow(
         PaymentsUiState(
@@ -65,7 +82,7 @@ class PaymentsViewModel @Inject constructor(
         val current = _state.value
         val item = current.items.find { it.id == itemId } ?: return
 
-        viewModelScope.launch {
+        vmScope.launch {
             // mark this item as PROCESSING
             _state.value = current.copy(
                 isGlobalLoading = true,
@@ -90,7 +107,6 @@ class PaymentsViewModel @Inject constructor(
                         "payment_amount=${canonicalAmount(item.amount)}; " +
                         "scenario=${item.scenario.name}; " +
                         "api_desc=$apiDesc",
-                screen = "Payments",
                 api = "simulatePayment"
             )
 
@@ -105,8 +121,7 @@ class PaymentsViewModel @Inject constructor(
                     msg = "Success (code=$httpCode)"
 
                     logger.info(
-                        message = "Payment success for ${item.title}: $msg",
-                        screen = "Payments"
+                        message = "Payment success for ${item.title}: $msg"
                     )
 
                     // ✅ Structured PAYMENT_RESULT log
@@ -116,16 +131,14 @@ class PaymentsViewModel @Inject constructor(
                         paymentAmount = canonicalAmount(item.amount),
                         title = item.title,
                         scenario = item.scenario.name,
-                        httpCode = httpCode,
-                        screen = "Payments"
+                        httpCode = httpCode
                     )
                 } else {
                     newStatus = PaymentStatus.FAILED
                     msg = "Failed (code=$httpCode)"
 
                     logger.error(
-                        message = "Payment failed for ${item.title}: $msg",
-                        screen = "Payments"
+                        message = "Payment failed for ${item.title}: $msg"
                     )
 
                     // ✅ Structured PAYMENT_RESULT log
@@ -135,8 +148,7 @@ class PaymentsViewModel @Inject constructor(
                         paymentAmount = canonicalAmount(item.amount),
                         title = item.title,
                         scenario = item.scenario.name,
-                        httpCode = httpCode,
-                        screen = "Payments"
+                        httpCode = httpCode
                     )
                 }
 
@@ -157,7 +169,7 @@ class PaymentsViewModel @Inject constructor(
 
                 logger.error(
                     message = "Payment exception for ${item.title}: $msg",
-                    screen = "Payments"
+                    throwable = t
                 )
 
                 // ✅ Structured PAYMENT_RESULT log for exception case
@@ -167,8 +179,7 @@ class PaymentsViewModel @Inject constructor(
                     paymentAmount = canonicalAmount(item.amount),
                     title = item.title,
                     scenario = item.scenario.name,
-                    httpCode = null,
-                    screen = "Payments"
+                    httpCode = null
                 )
 
                 val updatedItems = _state.value.items.map {

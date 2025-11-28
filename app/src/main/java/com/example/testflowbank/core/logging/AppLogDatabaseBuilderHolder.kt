@@ -1,8 +1,7 @@
-package com.example.testflowbank.core.crash
+package com.example.testflowbank.core.logging
 
 import android.content.Context
 import androidx.room.Room
-import com.example.testflowbank.core.logging.AppLogDatabase
 
 object AppLogDatabaseBuilderHolder {
 

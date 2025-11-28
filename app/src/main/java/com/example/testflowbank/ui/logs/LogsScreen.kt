@@ -5,10 +5,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.testflowbank.core.util.CurrentScreenTracker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -21,6 +23,9 @@ fun LogsScreen(
     val logs = viewModel.logs.collectAsState().value
     val df = rememberDateFormatter()
 
+    LaunchedEffect(Unit) {
+        CurrentScreenTracker.currentScreen = "LogsScreen"
+    }
     Scaffold(
         topBar = { CenterAlignedTopAppBar(title = { Text("Logs") }) }
     ) { innerPadding ->

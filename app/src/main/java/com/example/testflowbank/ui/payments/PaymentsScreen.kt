@@ -6,12 +6,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.testflowbank.core.util.CurrentScreenTracker
 import com.example.testflowbank.data.payments.PaymentItem
 import com.example.testflowbank.data.payments.PaymentStatus
 
@@ -22,6 +24,9 @@ fun PaymentsScreen(
 ) {
     val state = viewModel.state.collectAsState().value
 
+    LaunchedEffect(Unit) {
+        CurrentScreenTracker.currentScreen = "PaymentsScreen"
+    }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(

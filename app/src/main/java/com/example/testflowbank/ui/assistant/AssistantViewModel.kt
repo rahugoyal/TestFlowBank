@@ -1,13 +1,16 @@
 package com.example.testflowbank.ui.assistant
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.example.testflowbank.core.crash.GlobalCoroutineErrorHandler
 import com.example.testflowbank.core.logging.AppLog
 import com.example.testflowbank.core.logging.AppLogger
 import com.example.testflowbank.core.session.SessionManager
 import com.example.testflowbank.data.logs.LogRepository
 import com.example.testflowbank.rag.RagPipeline
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,13 +24,15 @@ class AssistantViewModel @Inject constructor(
     private val logger: AppLogger,
     private val sessionManager: SessionManager
 ) : ViewModel() {
-
+    private val vmScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Main.immediate + GlobalCoroutineErrorHandler
+    )
     val state: StateFlow<AssistantUiState> = sessionStore.state
 
     init {
         // Model init only once per app process
         if (!sessionStore.hasInitializedModel) {
-            viewModelScope.launch {
+            vmScope.launch {
                 initModelOnce()
             }
         }
@@ -60,6 +65,13 @@ class AssistantViewModel @Inject constructor(
                     progressMessage = null
                 )
             }
+
+            try {
+                logger.error(
+                    message = "Failed to initialize model: ${t.message}",
+                    throwable = t
+                )
+            } catch (_: Throwable) { }
         }
     }
 
@@ -72,7 +84,7 @@ class AssistantViewModel @Inject constructor(
         val text = current.inputText.trim()
         if (text.isEmpty() || current.isSending) return
 
-        viewModelScope.launch {
+        vmScope.launch {
             val isSmallTalk = isGreetingOrSmallTalk(text)
 
             // Reserve 2 ids for this turn (user + thinking)
@@ -144,13 +156,14 @@ class AssistantViewModel @Inject constructor(
         try {
             refreshCurrentSessionLogs()
         } catch (t: Throwable) {
-            // If refresh fails, log it but still try RAG with old memory
             try {
                 logger.error(
-                    message = "Failed to refresh session logs: ${t.message}",
-                    screen = "Assistant"
+                    message = "RAG pipeline failure for question: \"$userQuestion\" — ${t.message}",
+                    throwable = t
                 )
             } catch (_: Throwable) { }
+
+            return "The local AI pipeline failed while answering your question: ${t.message}"
         }
 
         // 4) Ask the RAG pipeline
@@ -158,9 +171,8 @@ class AssistantViewModel @Inject constructor(
             ragPipeline.generateResponse(userQuestion)
         } catch (t: Throwable) {
             try {
-                logger.crash(
+                logger.error(
                     message = "RAG pipeline failure for question: \"$userQuestion\" — ${t.message}",
-                    screen = "Assistant",
                     throwable = t
                 )
             } catch (_: Throwable) { }
@@ -178,7 +190,7 @@ class AssistantViewModel @Inject constructor(
         } catch (t: Throwable) {
             logger.error(
                 message = "Error loading logs for session $sessionId: ${t.message}",
-                screen = "Assistant"
+                throwable = t
             )
             emptyList()
         }
@@ -231,7 +243,7 @@ class AssistantViewModel @Inject constructor(
         val cutIndex = text.lastIndexOf('\n', startIndex = maxChars)
             .takeIf { it > 0 } ?: maxChars
 
-        val trimmed = text.substring(0, cutIndex).trimEnd()
+        val trimmed = text.take(cutIndex).trimEnd()
         return "$trimmed\n\n[Answer shortened to keep it concise.]"
     }
 }

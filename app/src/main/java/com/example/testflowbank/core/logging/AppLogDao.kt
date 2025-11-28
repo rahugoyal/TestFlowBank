@@ -17,11 +17,4 @@ interface AppLogDao {
 
     @Query("SELECT * FROM app_logs ORDER BY timestamp DESC LIMIT :limit")
     suspend fun getLatest(limit: Int = 200): List<AppLog>
-
-    @Query(
-        "SELECT * FROM app_logs " +
-                "WHERE sessionId = :sessionId " +
-                "ORDER BY timestamp DESC LIMIT :limit"
-    )
-    suspend fun getLatestForSession(sessionId: Long, limit: Int): List<AppLog>
 }

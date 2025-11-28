@@ -1,9 +1,8 @@
-// com/example/testflowbank/core/anr/AnrWatchdog.kt
 package com.example.testflowbank.core.anr
 
 import android.os.Handler
 import android.os.Looper
-import com.example.testflowbank.core.crash.AppLogDatabaseBuilderHolder
+import com.example.testflowbank.core.logging.AppLogDatabaseBuilderHolder
 import com.example.testflowbank.core.logging.AppLog
 import com.example.testflowbank.core.session.SessionManagerEntryPoint
 import dagger.hilt.android.EntryPointAccessors
@@ -64,7 +63,8 @@ class AnrWatchdog(
                 api = null,
                 type = "ANR",
                 sessionId = sessionId,
-                message = "Main thread unresponsive for >= ${timeoutMs}ms.\nStacktrace:\n$stacktrace"
+                message = "Main thread unresponsive for >= ${timeoutMs}ms",
+                stackTrace = stacktrace
             )
 
             dao.insertSync(anrLog)

@@ -1,13 +1,16 @@
 package com.example.testflowbank.ui.transactions
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.example.testflowbank.core.crash.GlobalCoroutineErrorHandler
 import com.example.testflowbank.core.logging.AppLogger
 import com.example.testflowbank.data.transactions.TransactionItem
 import com.example.testflowbank.data.transactions.TransactionType
 import com.example.testflowbank.data.transactions.TransactionCategory
 import com.example.testflowbank.data.transactions.TransactionsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,16 +46,17 @@ class TransactionsViewModel @Inject constructor(
     private val repo: TransactionsRepository,
     private val logger: AppLogger
 ) : ViewModel() {
-
+    private val vmScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Main.immediate + GlobalCoroutineErrorHandler
+    )
     private val _state = MutableStateFlow(TransactionsUiState())
     val state: StateFlow<TransactionsUiState> = _state.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        vmScope.launch {
             // Log entry into Transactions module
-            logger.screenView("Transactions")
+            logger.screenView()
             logger.journeyStep(
-                screen = "Transactions",
                 step = "OPEN_TRANSACTIONS",
                 detail = "User opened transactions module"
             )
@@ -64,9 +68,8 @@ class TransactionsViewModel @Inject constructor(
         if (_state.value.activeTab == tab) return
         _state.value = _state.value.copy(activeTab = tab)
 
-        viewModelScope.launch {
+        vmScope.launch {
             logger.journeyStep(
-                screen = "Transactions",
                 step = "TAB_CHANGE",
                 detail = "tab=${tab.name}"
             )
@@ -81,9 +84,8 @@ class TransactionsViewModel @Inject constructor(
             activeTab = TransactionsScreenTab.DETAIL
         )
 
-        viewModelScope.launch {
+        vmScope.launch {
             logger.journeyStep(
-                screen = "Transactions",
                 step = "VIEW_TRANSACTION_DETAIL",
                 detail = "id=$id; amount=${item.amount}; type=${item.type}; category=${item.category}"
             )
@@ -95,9 +97,8 @@ class TransactionsViewModel @Inject constructor(
             activeTab = TransactionsScreenTab.INSIGHTS
         )
 
-        viewModelScope.launch {
+        vmScope.launch {
             logger.journeyStep(
-                screen = "Transactions",
                 step = "OPEN_INSIGHTS",
                 detail = "User opened transaction insights"
             )
@@ -122,8 +123,7 @@ class TransactionsViewModel @Inject constructor(
             )
 
             logger.info(
-                message = "Loaded ${items.size} transactions for this session",
-                screen = "Transactions"
+                message = "Loaded ${items.size} transactions for this session"
             )
         } catch (t: Throwable) {
             _state.value = _state.value.copy(
@@ -133,7 +133,7 @@ class TransactionsViewModel @Inject constructor(
 
             logger.error(
                 message = "Failed to load transactions: ${t.message}",
-                screen = "Transactions"
+                throwable = t
             )
         }
     }

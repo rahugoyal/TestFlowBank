@@ -3,11 +3,13 @@ package com.example.testflowbank.ui.login
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.testflowbank.core.util.CurrentScreenTracker
 
 @Composable
 fun LoginScreen(
@@ -19,6 +21,9 @@ fun LoginScreen(
     val isLoading = viewModel.isLoading
     val error = viewModel.error
 
+    LaunchedEffect(Unit) {
+        CurrentScreenTracker.currentScreen = "LoginScreen"
+    }
     Surface(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier.fillMaxSize(),

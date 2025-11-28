@@ -3,10 +3,12 @@ package com.example.testflowbank.ui.profile
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.testflowbank.core.util.CurrentScreenTracker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -15,7 +17,9 @@ fun ProfileScreen(
 ) {
     val state = viewModel.state.collectAsState().value
 
-
+    LaunchedEffect(Unit) {
+        CurrentScreenTracker.currentScreen = "ProfileScreen"
+    }
     Scaffold(
         topBar = { CenterAlignedTopAppBar(title = { Text("Profile") }) }
     ) { innerPadding ->

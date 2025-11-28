@@ -3,32 +3,20 @@ package com.example.testflowbank.core.crash
 import com.example.testflowbank.core.logging.AppLog
 
 object CrashLogFactory {
-
     fun fromThrowable(
-        thread: Thread,
         throwable: Throwable,
-        screen: String? = null
+        screen: String?
     ): AppLog {
-        val msg = buildCrashMessage(thread, throwable)
 
         return AppLog(
             timestamp = System.currentTimeMillis(),
+            message = throwable.message ?: "Unknown Crash",
+            stackTrace = throwable.stackTraceToString(),
             screen = screen,
-            action = "UNCAUGHT_EXCEPTION",
-            api = null,
             type = "CRASH",
-            message = msg,
-            sessionId = 0
+            sessionId = 0L,
+            action = null,
+            api = null
         )
-    }
-
-    private fun buildCrashMessage(thread: Thread, throwable: Throwable): String {
-        return """
-            Thread: ${thread.name}
-            Exception: ${throwable::class.java.name}
-            Message: ${throwable.message}
-            Stacktrace:
-            ${throwable.stackTraceToString()}
-        """.trimIndent()
     }
 }

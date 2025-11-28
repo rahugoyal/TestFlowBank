@@ -1,6 +1,7 @@
 package com.example.testflowbank.core.logging
 
 import com.example.testflowbank.core.session.SessionManager
+import com.example.testflowbank.core.util.CurrentScreenTracker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -16,19 +17,20 @@ class AppLogger @Inject constructor(
     private suspend fun log(
         type: String,
         message: String,
-        screen: String? = null,
         action: String? = null,
-        api: String? = null
+        api: String? = null,
+        throwable: Throwable? = null
     ) = withContext(Dispatchers.IO) {
         dao.insert(
             AppLog(
                 timestamp = System.currentTimeMillis(),
-                sessionId = sessionManager.currentSessionId(),   // 👈 current session
-                screen = screen,
+                sessionId = sessionManager.currentSessionId(),
+                screen = CurrentScreenTracker.currentScreen,
                 action = action,
                 api = api,
                 type = type,
-                message = message
+                message = throwable?.message ?: message,
+                stackTrace = throwable?.stackTraceToString()
             )
         )
     }
@@ -37,34 +39,34 @@ class AppLogger @Inject constructor(
 
     suspend fun info(
         message: String,
-        screen: String? = null,
         action: String? = null,
         api: String? = null
-    ) = log("INFO", message, screen, action, api)
+    ) = log(type = "INFO", message = message, action = action, api = api)
 
     suspend fun error(
         message: String,
-        screen: String? = null,
-        api: String? = null
-    ) = log("ERROR", message, screen, api = api)
+        api: String? = null,
+        throwable: Throwable? = null
+    ) = log(
+        type = "ERROR",
+        message = message,
+        api = api,
+        throwable = throwable
+    )
 
     suspend fun api(
         message: String,
-        screen: String? = null,
         api: String? = null
-    ) = log("API", message, screen, api = api)
+    ) = log(type = "API", message = message, api = api)
 
-    // ---------- Journey helpers (navigation / actions) ----------
 
-    suspend fun screenView(screen: String) =
+    suspend fun screenView() =
         info(
             message = "Screen viewed",
-            screen = screen,
             action = "SCREEN_VIEW"
         )
 
     suspend fun journeyStep(
-        screen: String,
         step: String,
         detail: String? = null
     ) = info(
@@ -76,41 +78,8 @@ class AppLogger @Inject constructor(
                 append(detail)
             }
         },
-        screen = screen,
         action = "JOURNEY_STEP"
     )
-
-    // ---------- Crash / severe error helper ----------
-
-    suspend fun crash(
-        message: String,
-        screen: String? = null,
-        throwable: Throwable? = null
-    ) {
-        val combinedMessage = buildString {
-            if (message.isNotBlank()) {
-                append(message)
-            }
-            if (throwable != null) {
-                if (isNotEmpty()) append("\n\n")
-                append("Exception=")
-                append(throwable.javaClass.name)
-                append("; message=")
-                append(throwable.message)
-                append("\nStacktrace:\n")
-                append(throwable.stackTraceToString())
-            }
-        }
-
-        log(
-            type = "CRASH",
-            message = combinedMessage.ifBlank { "Crash reported" },
-            screen = screen,
-            action = if (throwable == null) "MANUAL_CRASH" else "HANDLED_CRASH"
-        )
-    }
-
-    // ---------- Structured payment result helper ----------
 
     suspend fun paymentResult(
         paymentType: String,     // e.g. DTH, CREDIT_CARD
@@ -118,8 +87,8 @@ class AppLogger @Inject constructor(
         paymentAmount: String?,  // e.g. "499"
         title: String,           // human label
         scenario: String,        // e.g. SERVER_ERROR, SUCCESS
-        httpCode: Int?,          // 200, 400, 500...
-        screen: String = "Payments"
+        httpCode: Int?          // 200, 400, 500...
+
     ) = log(
         type = "PAYMENT",
         message = buildString {
@@ -139,7 +108,6 @@ class AppLogger @Inject constructor(
             append("; http_code=")
             append(httpCode ?: -1)
         },
-        screen = screen,
         action = "PAYMENT_RESULT",
         api = "simulatePayment"
     )

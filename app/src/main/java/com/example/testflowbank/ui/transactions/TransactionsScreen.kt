@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.testflowbank.core.util.CurrentScreenTracker
 import com.example.testflowbank.data.transactions.TransactionItem
 import com.example.testflowbank.data.transactions.TransactionType
 import java.time.format.DateTimeFormatter
@@ -33,7 +35,9 @@ fun TransactionsScreen(
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-
+    LaunchedEffect(Unit) {
+        CurrentScreenTracker.currentScreen = "TransactionsScreen"
+    }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(

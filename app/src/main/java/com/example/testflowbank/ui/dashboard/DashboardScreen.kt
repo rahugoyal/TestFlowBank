@@ -3,10 +3,11 @@ package com.example.testflowbank.ui.dashboard
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-
+import com.example.testflowbank.core.util.CurrentScreenTracker
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -19,6 +20,9 @@ fun DashboardScreen(
 ) {
     val state = viewModel.uiState
 
+    LaunchedEffect(Unit) {
+        CurrentScreenTracker.currentScreen = "DashboardScreen"
+    }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(title = { Text("Dashboard") })

@@ -12,5 +12,6 @@ data class AppLog(
     val action: String?,
     val api: String?,
     val type: String,
-    val message: String
+    val message: String,
+    val stackTrace: String?
 )
