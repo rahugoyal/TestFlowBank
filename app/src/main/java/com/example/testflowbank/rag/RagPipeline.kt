@@ -162,6 +162,23 @@ class RagPipeline(application: Application) {
         private const val TOKENIZER_MODEL_PATH = "/data/local/tmp/sentencepiece.model"
         private const val EMBEDDING_GEMMA_MODEL_PATH = "/data/local/tmp/embeddinggemma.tflite"
 
-        private const val PROMPT_TEMPLATE: String = "You are an assistant for question-answering tasks. Here are the things I want to remember: {0} Use the things I want to remember, answer the following question the user has: {1}"
-    }
+        private const val PROMPT_TEMPLATE: String =
+            "You are a concise QA assistant for an Android app.\n" +
+                    "\n" +
+                    "LOG CONTEXT:\n" +
+                    "{0}\n" +
+                    "\n" +
+                    "USER QUESTION:\n" +
+                    "{1}\n" +
+                    "\n" +
+                    "Each log line may contain: time, type (INFO/API/ERROR/CRASH), screen, action, api, message, stackTrace, exception.\n" +
+                    "\n" +
+                    "Rules:\n" +
+                    "- Use ONLY information found in the logs.\n" +
+                    "- First understand what the user is asking (screen, API, payment, crash, etc.).\n" +
+                    "- If the question is about what SUCCEEDED, mention only successful operations and ignore failures unless explicitly asked.\n" +
+                    "- If the question is about what FAILED or CRASHED or EXCEPTION, focus on EXCEPTION/ERROR/CRASH logs and give the main cause in simple words.\n" +
+                    "- If the question is about the journey, describe key screens and actions in order.\n" +
+                    "- If the logs do not clearly answer the question, say that briefly.\n" +
+                    "- Answer in 1–3 short sentences, no bullet points, no raw stack traces."    }
 }

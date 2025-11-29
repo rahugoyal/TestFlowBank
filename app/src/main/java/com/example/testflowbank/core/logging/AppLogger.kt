@@ -13,8 +13,7 @@ class AppLogger @Inject constructor(
         message: String,
         action: String? = null,
         api: String? = null,
-        throwable: Throwable? = null,
-        exception: String? = null
+        throwable: Throwable? = null
     ) = withContext(Dispatchers.IO) {
         dao.insert(
             AppLog(
@@ -34,7 +33,7 @@ class AppLogger @Inject constructor(
         message: String,
         action: String? = null,
         api: String? = null
-    ) = log(type = "INFO", message = message, action = action, api = api)
+    ) = log(type = "INFO", message = message, action = "USER_ACTION$action", api = api)
 
     suspend fun error(
         message: String,
@@ -43,7 +42,30 @@ class AppLogger @Inject constructor(
         action: String? = null
     ) = log(
         type = "ERROR",
-        message = message,
+        message = buildString {
+            append("ERROR_EVENT; ")
+
+            if (!api.isNullOrBlank()) {
+                append("api=")
+                append(api)
+                append("; ")
+            }
+
+            append("result=FAILED; ")
+
+            // main human message
+            append("message=")
+            append(message)
+
+            if (throwable != null) {
+                append("; exception=")
+                append(throwable.javaClass.name)
+                if (!throwable.message.isNullOrBlank()) {
+                    append("; exception_message=")
+                    append(throwable.message)
+                }
+            }
+        },
         api = api,
         throwable = throwable,
         action = action
@@ -52,7 +74,7 @@ class AppLogger @Inject constructor(
     suspend fun api(
         message: String,
         api: String? = null
-    ) = log(type = "API", message = message, api = api)
+    ) = log(type = "API", message = message, api = api, action = "API_RESULT")
 
 
     suspend fun screenView() =

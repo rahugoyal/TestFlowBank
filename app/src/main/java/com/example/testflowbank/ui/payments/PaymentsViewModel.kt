@@ -165,7 +165,7 @@ class PaymentsViewModel @Inject constructor(
                     globalError = null
                 )
             } catch (t: Throwable) {
-                val msg = "Exception: ${t.message}"
+                val msg = "Exception: $t"
 
                 logger.error(
                     action = "EXCEPTION DETECTED",

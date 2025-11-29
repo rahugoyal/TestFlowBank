@@ -60,7 +60,7 @@ class AssistantViewModel @Inject constructor(
             sessionStore.updateState {
                 it.copy(
                     isModelReady = false,
-                    modelError = "Failed to initialize model: ${t.message}",
+                    modelError = "Failed to initialize model: $t",
                     progressMessage = null
                 )
             }
@@ -68,7 +68,7 @@ class AssistantViewModel @Inject constructor(
             try {
                 logger.error(
                     action = "EXCEPTION DETECTED",
-                    message = "Failed to initialize model: ${t.message}",
+                    message = "Failed to initialize model: $t",
                     throwable = t
                 )
             } catch (_: Throwable) {
@@ -154,13 +154,13 @@ class AssistantViewModel @Inject constructor(
             try {
                 logger.error(
                     action = "EXCEPTION DETECTED",
-                    message = "RAG pipeline failure for question: \"$userQuestion\" — ${t.message}",
+                    message = "RAG pipeline failure for question: \"$userQuestion\" — $t",
                     throwable = t
                 )
             } catch (_: Throwable) {
             }
 
-            return "The local AI pipeline failed while answering your question: ${t.message}"
+            return "The local AI pipeline failed while answering your question: $t"
         }
 
         val raw = try {
@@ -169,7 +169,7 @@ class AssistantViewModel @Inject constructor(
             try {
                 logger.error(
                     action = "EXCEPTION DETECTED",
-                    message = "RAG pipeline failure for question: \"$userQuestion\" — ${t.message}",
+                    message = "RAG pipeline failure for question: \"$userQuestion\" — $t",
                     throwable = t
                 )
             } catch (_: Throwable) {
@@ -201,8 +201,14 @@ class AssistantViewModel @Inject constructor(
 
     private fun logsToFacts(logs: List<AppLog>): List<String> =
         logs.map { log ->
+            val shortStack = log.stackTrace
+                ?.lineSequence()
+                ?.take(3)
+                ?.joinToString(" | ")
+                ?: ""
+
             buildString {
-                append("; time=")
+                append("time=")
                 append(log.timestamp)
                 append("; type=")
                 append(log.type)
@@ -218,17 +224,17 @@ class AssistantViewModel @Inject constructor(
                     append("; api=")
                     append(log.api)
                 }
-                append("; message=")
-                append(log.message)
-
-                if (log.stackTrace.isNullOrEmpty().not()) {
-                    append("; stackTrace=")
-                    append(log.stackTrace)
+                if (!log.message.isNullOrBlank()) {
+                    append("; message=")
+                    append(log.message)
                 }
-
-                if (log.exception.isNullOrEmpty().not()) {
+                if (!log.exception.isNullOrBlank()) {
                     append("; exception=")
                     append(log.exception)
+                }
+                if (shortStack.isNotBlank()) {
+                    append("; stack=")
+                    append(shortStack)
                 }
             }
         }
@@ -241,15 +247,4 @@ class AssistantViewModel @Inject constructor(
             text == pattern || text.startsWith("$pattern ")
         }
     }
-
-//    private fun shortenAnswer(text: String): String {
-//        val maxChars = 1500
-//        if (text.length <= maxChars) return text
-//
-//        val cutIndex = text.lastIndexOf('\n', startIndex = maxChars)
-//            .takeIf { it > 0 } ?: maxChars
-//
-//        val trimmed = text.take(cutIndex).trimEnd()
-//        return "$trimmed\n\n[Answer shortened to keep it concise.]"
-//    }
 }

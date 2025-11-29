@@ -128,12 +128,12 @@ class TransactionsViewModel @Inject constructor(
         } catch (t: Throwable) {
             _state.value = _state.value.copy(
                 isLoading = false,
-                error = "Failed to load transactions: ${t.message}"
+                error = "Failed to load transactions: $t"
             )
 
             logger.error(
                 action = "EXCEPTION DETECTED",
-                message = "Failed to load transactions: ${t.message}",
+                message = "Failed to load transactions: $t",
                 throwable = t
             )
         }

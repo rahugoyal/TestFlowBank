@@ -66,7 +66,7 @@ class ProfileViewModel @Inject constructor(
                     logger.error(msg)
                 }
             } catch (t: Throwable) {
-                val msg = "Profile exception: ${t.message}"
+                val msg = "Profile exception: $t"
                 _state.value = ProfileUiState(isLoading = false, error = msg)
                 logger.error(
                     action = "EXCEPTION DETECTED",

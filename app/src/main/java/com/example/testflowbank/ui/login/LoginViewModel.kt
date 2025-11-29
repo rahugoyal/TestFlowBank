@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.example.testflowbank.core.crash.GlobalCoroutineErrorHandler
 import com.example.testflowbank.core.logging.AppLogger
 import com.example.testflowbank.data.auth.AuthRepository
+import com.example.testflowbank.data.auth.LoginResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,10 +57,11 @@ class LoginViewModel @Inject constructor(
                     isLoading = false
                 }
             } catch (t: Throwable) {
-                val msg = "Login exception: ${t.message}"
+                val msg = "Login exception: $t"
                 logger.error(
                     action = "EXCEPTION DETECTED",
-                    message = msg, api = "POST /api/login"
+                    message = msg, api = "POST /api/login",
+                    throwable = t
                 )
                 error = msg
                 isLoading = false
