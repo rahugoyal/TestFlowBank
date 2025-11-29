@@ -1,41 +1,34 @@
 package com.example.testflowbank.core.logging
 
-import com.example.testflowbank.core.session.SessionManager
 import com.example.testflowbank.core.util.CurrentScreenTracker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AppLogger @Inject constructor(
-    private val dao: AppLogDao,
-    private val sessionManager: SessionManager
+    private val dao: AppLogDao
 ) {
-
-    /**
-     * Base logging helper – all logs go through this.
-     */
     private suspend fun log(
         type: String,
         message: String,
         action: String? = null,
         api: String? = null,
-        throwable: Throwable? = null
+        throwable: Throwable? = null,
+        exception: String? = null
     ) = withContext(Dispatchers.IO) {
         dao.insert(
             AppLog(
                 timestamp = System.currentTimeMillis(),
-                sessionId = sessionManager.currentSessionId(),
                 screen = CurrentScreenTracker.currentScreen,
                 action = action,
                 api = api,
                 type = type,
-                message = throwable?.message ?: message,
-                stackTrace = throwable?.stackTraceToString()
+                message = throwable?.let { it.message ?: it.toString() } ?: message,
+                stackTrace = throwable?.stackTraceToString(),
+                exception = throwable?.javaClass?.name
             )
         )
     }
-
-    // ---------- Generic log helpers ----------
 
     suspend fun info(
         message: String,
@@ -46,12 +39,14 @@ class AppLogger @Inject constructor(
     suspend fun error(
         message: String,
         api: String? = null,
-        throwable: Throwable? = null
+        throwable: Throwable? = null,
+        action: String? = null
     ) = log(
         type = "ERROR",
         message = message,
         api = api,
-        throwable = throwable
+        throwable = throwable,
+        action = action
     )
 
     suspend fun api(
@@ -82,12 +77,12 @@ class AppLogger @Inject constructor(
     )
 
     suspend fun paymentResult(
-        paymentType: String,     // e.g. DTH, CREDIT_CARD
-        paymentStatus: String,   // e.g. SUCCESS, FAILED
-        paymentAmount: String?,  // e.g. "499"
-        title: String,           // human label
-        scenario: String,        // e.g. SERVER_ERROR, SUCCESS
-        httpCode: Int?          // 200, 400, 500...
+        paymentType: String,
+        paymentStatus: String,
+        paymentAmount: String?,
+        title: String,
+        scenario: String,
+        httpCode: Int?
 
     ) = log(
         type = "PAYMENT",

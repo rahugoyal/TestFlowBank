@@ -9,9 +9,9 @@ class TransactionsRepository @Inject constructor() {
 
     private val items: List<TransactionItem> = buildFakeTransactions()
 
-    suspend fun getAll(): List<TransactionItem> = items
+    fun getAll(): List<TransactionItem> = items
 
-    suspend fun getRecent(limit: Int): List<TransactionItem> =
+    fun getRecent(limit: Int): List<TransactionItem> =
         items.sortedByDescending { it.dateTime }.take(limit)
 
     private fun buildFakeTransactions(): List<TransactionItem> {

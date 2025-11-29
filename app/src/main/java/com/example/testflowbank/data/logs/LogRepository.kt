@@ -9,10 +9,5 @@ import javax.inject.Singleton
 class LogRepository @Inject constructor(
     private val dao: AppLogDao
 ) {
-    suspend fun getLatest(limit: Int = 200): List<AppLog> = dao.getLatest(limit)
-
-    suspend fun getLatestForSession(
-        sessionId: Long,
-        limit: Int
-    ): List<AppLog> = dao.getLatest(limit)
+    suspend fun getLatest(limit: Int = 400): List<AppLog> = dao.getLatest(limit)
 }

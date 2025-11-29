@@ -75,7 +75,10 @@ class DashboardViewModel @Inject constructor(
             } catch (t: Throwable) {
                 val msg = "Dashboard exception: ${t.message}"
                 uiState = uiState.copy(isLoading = false, error = msg)
-                logger.error(msg, throwable = t)
+                logger.error(
+                    action = "EXCEPTION DETECTED",
+                    message = msg, throwable = t
+                )
             }
         }
     }

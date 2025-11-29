@@ -30,7 +30,6 @@ class AssistantViewModel @Inject constructor(
     val state: StateFlow<AssistantUiState> = sessionStore.state
 
     init {
-        // Model init only once per app process
         if (!sessionStore.hasInitializedModel) {
             vmScope.launch {
                 initModelOnce()
@@ -68,10 +67,12 @@ class AssistantViewModel @Inject constructor(
 
             try {
                 logger.error(
+                    action = "EXCEPTION DETECTED",
                     message = "Failed to initialize model: ${t.message}",
                     throwable = t
                 )
-            } catch (_: Throwable) { }
+            } catch (_: Throwable) {
+            }
         }
     }
 
@@ -87,7 +88,6 @@ class AssistantViewModel @Inject constructor(
         vmScope.launch {
             val isSmallTalk = isGreetingOrSmallTalk(text)
 
-            // Reserve 2 ids for this turn (user + thinking)
             val baseId = sessionStore.reserveMessageIds(count = 2)
 
             val userMsg = ChatMessage(
@@ -137,59 +137,57 @@ class AssistantViewModel @Inject constructor(
         }
     }
 
-    // --- Core logic: refresh this-session logs, then call RAG ---
-
     private suspend fun generateRagAnswer(userQuestion: String): String {
-        // 1) Handle greetings without hitting RAG
         if (isGreetingOrSmallTalk(userQuestion)) {
             return "Hi! I’m your test assistant. Ask me things like:\n" +
                     "- \"Summarize this session’s journey\"\n" +
                     "- \"Which payments succeeded or failed?\""
         }
 
-        // 2) Ensure model is ready
         if (!state.value.isModelReady) {
             return "The local model is still initializing. Please wait and try again."
         }
 
-        // 3) Refresh ONLY this session's logs into memory
         try {
             refreshCurrentSessionLogs()
         } catch (t: Throwable) {
             try {
                 logger.error(
+                    action = "EXCEPTION DETECTED",
                     message = "RAG pipeline failure for question: \"$userQuestion\" — ${t.message}",
                     throwable = t
                 )
-            } catch (_: Throwable) { }
+            } catch (_: Throwable) {
+            }
 
             return "The local AI pipeline failed while answering your question: ${t.message}"
         }
 
-        // 4) Ask the RAG pipeline
         val raw = try {
             ragPipeline.generateResponse(userQuestion)
         } catch (t: Throwable) {
             try {
                 logger.error(
+                    action = "EXCEPTION DETECTED",
                     message = "RAG pipeline failure for question: \"$userQuestion\" — ${t.message}",
                     throwable = t
                 )
-            } catch (_: Throwable) { }
+            } catch (_: Throwable) {
+            }
 
             return "The local AI pipeline failed while answering your question: ${t.message}"
         }
 
-        return shortenAnswer(raw)
+        return raw
     }
 
     private suspend fun refreshCurrentSessionLogs() {
-        val sessionId = sessionManager.currentSessionId()
         val logs: List<AppLog> = try {
-            logRepo.getLatestForSession(sessionId, limit = 500)
+            logRepo.getLatest(limit = 400)
         } catch (t: Throwable) {
             logger.error(
-                message = "Error loading logs for session $sessionId: ${t.message}",
+                action = "EXCEPTION DETECTED",
+                message = "Error loading logs : ${t.message}",
                 throwable = t
             )
             emptyList()
@@ -204,19 +202,17 @@ class AssistantViewModel @Inject constructor(
     private fun logsToFacts(logs: List<AppLog>): List<String> =
         logs.map { log ->
             buildString {
-                append("sessionId=")
-                append(log.sessionId)
                 append("; time=")
                 append(log.timestamp)
                 append("; type=")
-                append(log.type)                 // INFO, API, PAYMENT, ERROR, CRASH, ANR
+                append(log.type)
                 if (!log.screen.isNullOrBlank()) {
                     append("; screen=")
                     append(log.screen)
                 }
                 if (!log.action.isNullOrBlank()) {
                     append("; action=")
-                    append(log.action)           // SCREEN_VIEW, JOURNEY_STEP, PAYMENT_RESULT, etc.
+                    append(log.action)
                 }
                 if (!log.api.isNullOrBlank()) {
                     append("; api=")
@@ -224,6 +220,16 @@ class AssistantViewModel @Inject constructor(
                 }
                 append("; message=")
                 append(log.message)
+
+                if (log.stackTrace.isNullOrEmpty().not()) {
+                    append("; stackTrace=")
+                    append(log.stackTrace)
+                }
+
+                if (log.exception.isNullOrEmpty().not()) {
+                    append("; exception=")
+                    append(log.exception)
+                }
             }
         }
 
@@ -236,14 +242,14 @@ class AssistantViewModel @Inject constructor(
         }
     }
 
-    private fun shortenAnswer(text: String): String {
-        val maxChars = 700
-        if (text.length <= maxChars) return text
-
-        val cutIndex = text.lastIndexOf('\n', startIndex = maxChars)
-            .takeIf { it > 0 } ?: maxChars
-
-        val trimmed = text.take(cutIndex).trimEnd()
-        return "$trimmed\n\n[Answer shortened to keep it concise.]"
-    }
+//    private fun shortenAnswer(text: String): String {
+//        val maxChars = 1500
+//        if (text.length <= maxChars) return text
+//
+//        val cutIndex = text.lastIndexOf('\n', startIndex = maxChars)
+//            .takeIf { it > 0 } ?: maxChars
+//
+//        val trimmed = text.take(cutIndex).trimEnd()
+//        return "$trimmed\n\n[Answer shortened to keep it concise.]"
+//    }
 }

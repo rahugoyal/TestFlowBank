@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 val GlobalCoroutineErrorHandler = CoroutineExceptionHandler { _, throwable ->
     CrashLogger.log(
         throwable = throwable,
-        screen = CurrentScreenTracker.currentScreen
+        screen = CurrentScreenTracker.currentScreen,
+        action = "CoroutineException"
     )
 }

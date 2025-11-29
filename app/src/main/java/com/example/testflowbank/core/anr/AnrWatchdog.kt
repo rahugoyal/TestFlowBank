@@ -4,8 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import com.example.testflowbank.core.logging.AppLogDatabaseBuilderHolder
 import com.example.testflowbank.core.logging.AppLog
-import com.example.testflowbank.core.session.SessionManagerEntryPoint
-import dagger.hilt.android.EntryPointAccessors
+import com.example.testflowbank.core.util.CurrentScreenTracker
 
 class AnrWatchdog(
     private val timeoutMs: Long = 5000L,  // 5s threshold
@@ -51,25 +50,20 @@ class AnrWatchdog(
 
             val mainThread = Looper.getMainLooper().thread
             val stacktrace = mainThread.stackTrace.joinToString("\n")
-            val entryPoint = EntryPointAccessors.fromApplication(
-                appContext,
-                SessionManagerEntryPoint::class.java
-            )
-            val sessionId = entryPoint.sessionManager().currentSessionId()
+
             val anrLog = AppLog(
                 timestamp = detectedAt,
-                screen = null,
-                action = "ANR_DETECTED",
+                screen = CurrentScreenTracker.currentScreen,
+                action = "ANR DETECTED",
                 api = null,
-                type = "ANR",
-                sessionId = sessionId,
+                type = "ERROR",
                 message = "Main thread unresponsive for >= ${timeoutMs}ms",
-                stackTrace = stacktrace
+                stackTrace = stacktrace,
+                exception = "ANR Exception"
             )
 
             dao.insertSync(anrLog)
         } catch (_: Throwable) {
-            // don't crash the watchdog
         }
     }
 }

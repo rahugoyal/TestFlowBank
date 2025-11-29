@@ -1,22 +1,21 @@
 package com.example.testflowbank.core.crash
 
 import com.example.testflowbank.core.logging.AppLog
-
 object CrashLogFactory {
     fun fromThrowable(
         throwable: Throwable,
-        screen: String?
+        screen: String?,
+        action: String?
     ): AppLog {
-
         return AppLog(
             timestamp = System.currentTimeMillis(),
-            message = throwable.message ?: "Unknown Crash",
+            message = throwable.message ?: throwable.toString(),
             stackTrace = throwable.stackTraceToString(),
             screen = screen,
-            type = "CRASH",
-            sessionId = 0L,
-            action = null,
-            api = null
+            type = "ERROR",
+            action = "$action DETECTED",
+            api = null,
+            exception = throwable.javaClass.name
         )
     }
 }

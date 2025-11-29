@@ -5,10 +5,10 @@ import com.example.testflowbank.core.logging.AppLogDatabaseBuilderHolder
 import com.example.testflowbank.core.util.AppContextProvider
 
 object CrashLogger {
-
     fun log(
         throwable: Throwable,
-        screen: String? = null
+        screen: String? = null,
+        action: String? = null
     ) {
         try {
             val context = AppContextProvider.context
@@ -17,13 +17,11 @@ object CrashLogger {
 
             val log: AppLog = CrashLogFactory.fromThrowable(
                 throwable = throwable,
-                screen = screen
+                screen = screen,
+                action = action
             )
-
             dao.insertSync(log)
-
         } catch (_: Throwable) {
-            // swallow – never crash while logging
         }
     }
 }

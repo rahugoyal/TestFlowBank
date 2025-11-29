@@ -71,11 +71,9 @@ class RagPipeline(application: Application) {
 
     private val retrievalAndInferenceChain = RetrievalAndInferenceChain(config)
 
-    // ⬇️ Save the init future so we can await it later
     private val initFuture: ListenableFuture<Boolean> = mediaPipeLanguageModel.initialize()
 
     init {
-        // Just for logging / debugging if you want, but non-blocking
         Futures.addCallback(
             initFuture,
             object : FutureCallback<Boolean> {
@@ -96,7 +94,7 @@ class RagPipeline(application: Application) {
      * Does NOT block the main thread.
      */
     suspend fun waitUntilReady(): Boolean = withContext(Dispatchers.Default) {
-        initFuture.await()  // suspends, no ANR
+        initFuture.await()
     }
 
     suspend fun memorizeLogChunks(logFacts: List<String>) = withContext(Dispatchers.Default) {
@@ -143,7 +141,7 @@ class RagPipeline(application: Application) {
                     prompt,
                     RetrievalConfig.create(
                         3,
-                        0.1f,   // small filter for relevance
+                        0.1f,
                         TaskType.QUESTION_ANSWERING
                     )
                 )
@@ -165,6 +163,5 @@ class RagPipeline(application: Application) {
         private const val EMBEDDING_GEMMA_MODEL_PATH = "/data/local/tmp/embeddinggemma.tflite"
 
         private const val PROMPT_TEMPLATE: String = "You are an assistant for question-answering tasks. Here are the things I want to remember: {0} Use the things I want to remember, answer the following question the user has: {1}"
-
     }
 }

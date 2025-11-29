@@ -7,14 +7,11 @@ class GlobalCrashHandler(
 ) : Thread.UncaughtExceptionHandler {
 
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
-
-        // Log the crash safely
         CrashLogger.log(
             throwable = throwable,
-            screen = CurrentScreenTracker.currentScreen
+            screen = CurrentScreenTracker.currentScreen,
+            action = "UncaughtException"
         )
-
-        // Allow Android to crash normally
         defaultHandler?.uncaughtException(thread, throwable)
     }
 }

@@ -5,8 +5,6 @@ import javax.inject.Singleton
 
 @Singleton
 class SessionManager @Inject constructor() {
-
-    // One logical session per app process by default.
     @Volatile
     private var currentId: Long = System.currentTimeMillis()
 

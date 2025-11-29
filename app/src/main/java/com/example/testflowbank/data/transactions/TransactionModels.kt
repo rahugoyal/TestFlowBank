@@ -3,8 +3,8 @@ package com.example.testflowbank.data.transactions
 import java.time.LocalDateTime
 
 enum class TransactionType {
-    DEBIT,      // money out
-    CREDIT      // money in
+    DEBIT,
+    CREDIT
 }
 
 enum class TransactionCategory {
@@ -24,6 +24,6 @@ data class TransactionItem(
     val type: TransactionType,
     val category: TransactionCategory,
     val description: String,
-    val reference: String,        // e.g. UPI ID, card last-4, biller name
-    val accountMasked: String     // e.g. "XXXX1234"
+    val reference: String,
+    val accountMasked: String
 )

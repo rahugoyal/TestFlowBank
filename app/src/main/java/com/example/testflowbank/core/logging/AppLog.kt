@@ -7,11 +7,11 @@ import androidx.room.PrimaryKey
 data class AppLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     val timestamp: Long,
-    val sessionId: Long,
     val screen: String?,
     val action: String?,
     val api: String?,
     val type: String,
     val message: String,
-    val stackTrace: String?
+    val stackTrace: String?,
+    val exception: String?
 )

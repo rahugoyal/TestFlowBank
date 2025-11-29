@@ -29,15 +29,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    // import com.example.testflowbank.rag.RagPipeline
-
     @Provides
     @Singleton
     fun provideRagPipeline(
         application: Application
     ): RagPipeline = RagPipeline(application)
 
-    // 1) Moshi instance with Kotlin support
     @Provides
     @Singleton
     fun provideMoshi(): Moshi =
@@ -45,7 +42,6 @@ object AppModule {
             .addLast(KotlinJsonAdapterFactory())
             .build()
 
-    // 2) OkHttp
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
@@ -57,7 +53,6 @@ object AppModule {
             .addInterceptor { chain ->
                 val original = chain.request()
 
-                // Add ReqRes free API key (safe for other hosts too, they just ignore it)
                 val requestWithKey = original.newBuilder()
                     .header("x-api-key", "reqres-free-v1")
                     .build()
@@ -67,8 +62,6 @@ object AppModule {
             .addInterceptor(logging)
             .build()
     }
-
-    // 3) Retrofit instances using that Moshi
 
     @Provides
     @Singleton
@@ -109,7 +102,6 @@ object AppModule {
             .client(okHttp)
             .build()
 
-    // in AppModule.kt
     @Provides
     @Singleton
     fun providePaymentsRetrofit(
@@ -122,28 +114,31 @@ object AppModule {
             .client(okHttp)
             .build()
 
-    // APIs
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideAuthApi(@Named("ReqRes") retrofit: Retrofit): AuthApi =
         retrofit.create(AuthApi::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideDashboardApi(@Named("DummyJson") retrofit: Retrofit): DashboardApi =
         retrofit.create(DashboardApi::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideTransactionsApi(@Named("JsonPlaceholder") retrofit: Retrofit): TransactionsApi =
         retrofit.create(TransactionsApi::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun providePaymentsApi(retrofit: Retrofit): PaymentsApi =
         retrofit.create(PaymentsApi::class.java)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideProfileApi(@Named("DummyJson") retrofit: Retrofit): ProfileApi =
         retrofit.create(ProfileApi::class.java)
 
-    // Room
     @Provides
     @Singleton
     fun provideAppLogDatabase(

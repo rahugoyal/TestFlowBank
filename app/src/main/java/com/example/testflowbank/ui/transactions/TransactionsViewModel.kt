@@ -132,6 +132,7 @@ class TransactionsViewModel @Inject constructor(
             )
 
             logger.error(
+                action = "EXCEPTION DETECTED",
                 message = "Failed to load transactions: ${t.message}",
                 throwable = t
             )

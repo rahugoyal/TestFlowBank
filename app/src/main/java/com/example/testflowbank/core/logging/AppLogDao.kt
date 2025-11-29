@@ -16,5 +16,5 @@ interface AppLogDao {
     fun insertSync(log: AppLog)
 
     @Query("SELECT * FROM app_logs ORDER BY timestamp DESC LIMIT :limit")
-    suspend fun getLatest(limit: Int = 200): List<AppLog>
+    suspend fun getLatest(limit: Int = 400): List<AppLog>
 }

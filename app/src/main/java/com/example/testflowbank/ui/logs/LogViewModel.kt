@@ -25,7 +25,7 @@ class LogsViewModel @Inject constructor(
 
     init {
         vmScope.launch {
-            _logs.value = repo.getLatest(200)
+            _logs.value = repo.getLatest(400)
         }
     }
 }

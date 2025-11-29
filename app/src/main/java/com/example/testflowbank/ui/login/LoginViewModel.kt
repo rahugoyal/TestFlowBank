@@ -57,7 +57,10 @@ class LoginViewModel @Inject constructor(
                 }
             } catch (t: Throwable) {
                 val msg = "Login exception: ${t.message}"
-                logger.error(msg, api = "POST /api/login")
+                logger.error(
+                    action = "EXCEPTION DETECTED",
+                    message = msg, api = "POST /api/login"
+                )
                 error = msg
                 isLoading = false
             }
