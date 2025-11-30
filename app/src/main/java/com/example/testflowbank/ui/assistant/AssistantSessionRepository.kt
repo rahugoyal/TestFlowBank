@@ -28,10 +28,11 @@ class AssistantSessionRepository @Inject constructor() {
     private val _state = MutableStateFlow(AssistantUiState())
     val state: StateFlow<AssistantUiState> = _state
 
-    /** True after model init is done once per app process. */
     var hasInitializedModel: Boolean = false
 
-    /** Monotonic message id counter for the whole app session. */
+    // 👇 track up to which log id we've embedded
+    var lastEmbeddedLogId: Long? = null
+
     private var nextMessageId: Long = 1L
 
     fun updateState(reducer: (AssistantUiState) -> AssistantUiState) {

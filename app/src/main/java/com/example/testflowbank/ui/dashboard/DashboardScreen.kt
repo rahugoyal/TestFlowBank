@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.testflowbank.core.util.CurrentScreenTracker
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -16,6 +17,8 @@ fun DashboardScreen(
     onGoToProfile: () -> Unit,
     onGoToLogs: () -> Unit,
     onGoToAssistant: () -> Unit,
+    onGoToCrashLab: () -> Unit,
+    onGoToScenarios: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState
@@ -100,6 +103,15 @@ fun DashboardScreen(
                 }
             }
 
+            OutlinedButton(
+                onClick = { onGoToCrashLab() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Open Crash Lab")
+            }
+            Button(onClick = { onGoToScenarios()}) {
+                Text("Test Scenarios")
+            }
             OutlinedButton(
                 onClick = onGoToAssistant,
                 modifier = Modifier.fillMaxWidth()

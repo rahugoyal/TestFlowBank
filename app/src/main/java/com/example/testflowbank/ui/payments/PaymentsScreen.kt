@@ -55,7 +55,6 @@ fun PaymentsScreen(
                     modifier = Modifier.padding(16.dp)
                 )
             }
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()

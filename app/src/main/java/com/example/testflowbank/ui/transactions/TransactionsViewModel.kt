@@ -69,6 +69,11 @@ class TransactionsViewModel @Inject constructor(
         _state.value = _state.value.copy(activeTab = tab)
 
         vmScope.launch {
+            logger.userAction(
+                actionName = "TAB_CHANGE",
+                target = "TransactionsTab",
+                detail = "tab=${tab.name}"
+            )
             logger.journeyStep(
                 step = "TAB_CHANGE",
                 detail = "tab=${tab.name}"
@@ -85,6 +90,11 @@ class TransactionsViewModel @Inject constructor(
         )
 
         vmScope.launch {
+            logger.userAction(
+                actionName = "CLICK_TRANSACTION",
+                target = "TransactionItem",
+                detail = "id=$id; amount=${item.amount}; type=${item.type}; category=${item.category}"
+            )
             logger.journeyStep(
                 step = "VIEW_TRANSACTION_DETAIL",
                 detail = "id=$id; amount=${item.amount}; type=${item.type}; category=${item.category}"
@@ -107,6 +117,8 @@ class TransactionsViewModel @Inject constructor(
 
     private suspend fun loadTransactions() {
         try {
+            logger.apiStart("getTransactions")
+
             _state.value = _state.value.copy(
                 isLoading = true,
                 error = null
@@ -121,6 +133,7 @@ class TransactionsViewModel @Inject constructor(
                 items = items,
                 insights = insights
             )
+            logger.apiSuccess("getTransactions", 200)
 
             logger.info(
                 message = "Loaded ${items.size} transactions for this session"

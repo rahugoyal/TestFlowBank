@@ -29,12 +29,21 @@ class AppLogger @Inject constructor(
         )
     }
 
+    // AppLogger.kt (only helpers shown, keep your existing log() as-is)
+
+    // 1) Generic info
     suspend fun info(
         message: String,
         action: String? = null,
         api: String? = null
-    ) = log(type = "INFO", message = message, action = "USER_ACTION$action", api = api)
+    ) = log(
+        type = "INFO",
+        message = message,
+        api = api,
+        action = action
+    )
 
+    // 2) Error / failure (for errors + handled crashes, etc.)
     suspend fun error(
         message: String,
         api: String? = null,
@@ -44,19 +53,14 @@ class AppLogger @Inject constructor(
         type = "ERROR",
         message = buildString {
             append("ERROR_EVENT; ")
-
             if (!api.isNullOrBlank()) {
                 append("api=")
                 append(api)
                 append("; ")
             }
-
             append("result=FAILED; ")
-
-            // main human message
             append("message=")
             append(message)
-
             if (throwable != null) {
                 append("; exception=")
                 append(throwable.javaClass.name)
@@ -71,15 +75,87 @@ class AppLogger @Inject constructor(
         action = action
     )
 
-    suspend fun api(
-        message: String,
-        api: String? = null
-    ) = log(type = "API", message = message, api = api, action = "API_RESULT")
+    // 3) API lifecycle logging
+    suspend fun apiStart(
+        api: String,
+        detail: String? = null
+    ) = log(
+        type = "API",
+        message = buildString {
+            append("API_CALL; api=")
+            append(api)
+            append("; phase=START")
+            if (!detail.isNullOrBlank()) {
+                append("; detail=")
+                append(detail)
+            }
+        },
+        api = api,
+        action = "API_START"
+    )
 
+    suspend fun apiSuccess(
+        api: String,
+        httpCode: Int,
+        durationMs: Long? = null,
+        detail: String? = null
+    ) = log(
+        type = "API",
+        message = buildString {
+            append("API_CALL; api=")
+            append(api)
+            append("; phase=END; result=SUCCESS; http_code=")
+            append(httpCode)
+            if (durationMs != null) {
+                append("; duration_ms=")
+                append(durationMs)
+            }
+            if (!detail.isNullOrBlank()) {
+                append("; detail=")
+                append(detail)
+            }
+        },
+        api = api,
+        action = "API_RESULT"
+    )
 
+    suspend fun apiFailure(
+        api: String,
+        httpCode: Int?,
+        throwable: Throwable? = null,
+        detail: String? = null
+    ) = log(
+        type = "API",
+        message = buildString {
+            append("API_CALL; api=")
+            append(api)
+            append("; phase=END; result=FAILED")
+            if (httpCode != null) {
+                append("; http_code=")
+                append(httpCode)
+            }
+            if (!detail.isNullOrBlank()) {
+                append("; detail=")
+                append(detail)
+            }
+            if (throwable != null) {
+                append("; exception=")
+                append(throwable.javaClass.name)
+                if (!throwable.message.isNullOrBlank()) {
+                    append("; exception_message=")
+                    append(throwable.message)
+                }
+            }
+        },
+        api = api,
+        throwable = throwable,
+        action = "API_RESULT"
+    )
+
+    // 4) Screen navigation / journey
     suspend fun screenView() =
         info(
-            message = "Screen viewed",
+            message = "USER_JOURNEY; event=SCREEN_VIEW; screen=${CurrentScreenTracker.currentScreen}",
             action = "SCREEN_VIEW"
         )
 
@@ -98,34 +174,67 @@ class AppLogger @Inject constructor(
         action = "JOURNEY_STEP"
     )
 
-    suspend fun paymentResult(
-        paymentType: String,
-        paymentStatus: String,
-        paymentAmount: String?,
-        title: String,
-        scenario: String,
-        httpCode: Int?
+    suspend fun userAction(
+        actionName: String,
+        target: String,
+        detail: String? = null
+    ) = info(
+        message = buildString {
+            append("USER_ACTION; action=")
+            append(actionName)
+            append("; target=")
+            append(target)
+            if (!detail.isNullOrBlank()) {
+                append("; detail=")
+                append(detail)
+            }
+        },
+        action = "USER_ACTION"
+    )
 
+    // 5) Payments (SUCCESS / FAILED)
+    suspend fun paymentResult(
+        paymentType: String,     // DTH, CREDIT_CARD, etc.
+        status: String,          // SUCCESS or FAILED
+        amount: String?,         // normalized "499"
+        contextLabel: String,    // "DTH Recharge", etc.
+        scenario: String,        // e.g. SERVER_ERROR / SUCCESS
+        httpCode: Int?,
+        api: String = "simulatePayment"
     ) = log(
         type = "PAYMENT",
         message = buildString {
-            append("PAYMENT_RESULT; ")
-            append("payment_type=")
+            append("PAYMENT_RESULT; payment_type=")
             append(paymentType)
-            append("; payment_status=")
-            append(paymentStatus)
-            append("; payment_title=")
-            append(title)
-            if (!paymentAmount.isNullOrBlank()) {
-                append("; payment_amount=")
-                append(paymentAmount)
+            append("; result=")
+            append(status)
+            if (!amount.isNullOrBlank()) {
+                append("; amount=")
+                append(amount)
             }
+            append("; label=")
+            append(contextLabel)
             append("; scenario=")
             append(scenario)
             append("; http_code=")
             append(httpCode ?: -1)
         },
-        action = "PAYMENT_RESULT",
-        api = "simulatePayment"
+        api = api,
+        action = "PAYMENT_RESULT"
+    )
+
+    // 6) Assistant question/answer (optional but very useful)
+    suspend fun assistantQuestion(
+        question: String
+    ) = info(
+        message = "ASSISTANT_Q; text=$question",
+        action = "ASSISTANT_Q"
+    )
+
+    suspend fun assistantAnswer(
+        answer: String
+    ) = info(
+        message = "ASSISTANT_A; text=$answer",
+        action = "ASSISTANT_A"
     )
 }

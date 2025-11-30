@@ -10,4 +10,9 @@ class LogRepository @Inject constructor(
     private val dao: AppLogDao
 ) {
     suspend fun getLatest(limit: Int = 400): List<AppLog> = dao.getLatest(limit)
+
+    suspend fun getNewerForSession(
+        afterId: Long
+    ): List<AppLog> =
+        dao.getNewerForSession(afterId)
 }

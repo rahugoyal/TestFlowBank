@@ -42,16 +42,19 @@ class LoginViewModel @Inject constructor(
         vmScope.launch {
             isLoading = true
             error = null
-            logger.api("Login started", api = "POST /api/login")
+            val api = "login"
+            logger.apiStart(api)
 
             try {
                 val response = authRepository.login(email, password)
                 if (response.token != null) {
+                    logger.apiSuccess(api, 200)
                     logger.info("Login success", api = "POST /api/login")
                     isLoading = false
                     onSuccess()
                 } else {
                     val msg = "Login failed: token missing"
+                    logger.apiFailure(api, 401)
                     logger.error(msg, api = "POST /api/login")
                     error = msg
                     isLoading = false

@@ -48,13 +48,18 @@ class DashboardViewModel @Inject constructor(
         vmScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
             try {
-                logger.api("Dashboard user fetch", api = "GET /users/1")
+                val apiName = "DASHBOARD"
+                val startTime = System.currentTimeMillis()
+
+                logger.apiStart(apiName, detail = "Open DASHBOARD")
+
                 val userRes = repo.getUser()
                 val cartRes = repo.getCart()
 
                 if (userRes.isSuccessful && cartRes.isSuccessful) {
                     val user = userRes.body()
                     val cart = cartRes.body()
+                    val duration = System.currentTimeMillis() - startTime
 
                     val fullName = "${user?.firstName.orEmpty()} ${user?.lastName.orEmpty()}".trim()
                     val total = cart?.total ?: 0.0
@@ -66,12 +71,21 @@ class DashboardViewModel @Inject constructor(
                         totalAmount = "₹$total",
                         error = null
                     )
+                    logger.apiSuccess(
+                        api = apiName,
+                        httpCode = 200,
+                        durationMs = duration,
+                        detail = "payment success"
+                    )
                     logger.info("Dashboard loaded ok")
                 } else {
                     val msg = "Dashboard API failed user=${userRes.code()} cart=${cartRes.code()}"
                     uiState = uiState.copy(isLoading = false, error = msg)
-                    logger.error(msg)
-                }
+                    logger.apiFailure(
+                        api = apiName,
+                        httpCode = userRes.code(),
+                        detail = "payment failed http ${userRes.code()}"
+                    )                }
             } catch (t: Throwable) {
                 val msg = "Dashboard exception: $t"
                 uiState = uiState.copy(isLoading = false, error = msg)

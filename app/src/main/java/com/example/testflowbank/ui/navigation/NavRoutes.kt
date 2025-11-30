@@ -8,4 +8,6 @@ object NavRoutes {
     const val PROFILE = "profile"
     const val LOGS = "logs"
     const val ASSISTANT = "assistant"
+    const val CRASHLAB = "crashLab"
+    const val SCENARIOS = "scenarios"
 }

@@ -48,7 +48,8 @@ class ProfileViewModel @Inject constructor(
         vmScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
-                logger.api("Profile fetch", api = "GET /users/1")
+                logger.apiStart("updateProfile")
+
                 val res = repo.getProfile()
                 if (res.isSuccessful) {
                     val body = res.body()
@@ -59,10 +60,12 @@ class ProfileViewModel @Inject constructor(
                         email = body?.email ?: "",
                         phone = body?.phone ?: ""
                     )
+                    logger.apiSuccess("updateProfile", res.code())
                     logger.info("Profile loaded")
                 } else {
                     val msg = "Profile failed code=${res.code()}"
                     _state.value = ProfileUiState(isLoading = false, error = msg)
+                    logger.apiFailure("updateProfile", res.code())
                     logger.error(msg)
                 }
             } catch (t: Throwable) {
